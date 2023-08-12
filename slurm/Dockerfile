@@ -7,6 +7,12 @@ COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 RUN mkdir -p /etc/slurm-llnl
 RUN mkdir -p /etc/slurm
-COPY ./*.conf /etc/slurm-llnl/
-COPY ./*.conf /etc/slurm/
+COPY ./sssd.conf /etc/sssd/sssd.conf
+RUN chmod 600 /etc/sssd/sssd.conf
+COPY ./slurm.conf /etc/slurm-llnl/
+COPY ./slurmdbd.conf /etc/slurm-llnl/
+COPY ./cgroup.conf /etc/slurm-llnl/
+COPY ./slurm.conf /etc/slurm/
+COPY ./slurmdbd.conf /etc/slurm/
+COPY ./cgroup.conf /etc/slurm/
 ENTRYPOINT [ "./entrypoint.sh" ]

@@ -2,6 +2,7 @@
 service munge start
 # 判断是否带--with-ldap参数
 if [ "$2" = "--with-ldap" ]; then
+    chmod 600 /etc/sssd/sssd.conf
     service sssd start
 fi
 if [ "$1" = "slurmd" ]; then

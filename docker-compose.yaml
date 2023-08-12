@@ -6,6 +6,7 @@ services:
       - LDAP_ORGANISATION=Slurm
       - LDAP_DOMAIN=slurm.local
       - LDAP_ADMIN_PASSWORD=admin
+      - LDAP_TLS=false
     ports:
       - 389:389
       - 636:636
@@ -31,10 +32,9 @@ services:
     build:
       context: ./slurm
       dockerfile: Dockerfile
-    command: ["slurmctld-dbd"]
+    command: ["slurmctld-dbd", "--with-ldap"]
     volumes:
-      - ./slurm-config:/etc/slurm-llnl
-      - ./slurm-config:/etc/slurm
+      - home-data:/home
     depends_on:
       - mysql
     networks:
@@ -42,13 +42,10 @@ services:
   compute01:
     image: "slurm/ubuntu:20.04"
     hostname: compute01
-    command: ["slurmd"]
+    command: ["slurmd", "--with-ldap"]
     volumes:
-      - ./slurm-config:/etc/slurm-llnl
       - home-data:/home
       - ldap-cert:/ldap-cert
-      - ./ldap/ldap.conf:/etc/ldap/ldap.conf
-      - ./ldap/sssd.conf:/etc/sssd/sssd.conf
     depends_on:
       - controller01
     networks:
@@ -56,13 +53,10 @@ services:
   compute02:
     image: "slurm/ubuntu:20.04"
     hostname: compute02
-    command: ["slurmd"]
+    command: ["slurmd", "--with-ldap"]
     volumes:
-      - ./slurm-config:/etc/slurm-llnl
       - home-data:/home
       - ldap-cert:/ldap-cert
-      - ./ldap/ldap.conf:/etc/ldap/ldap.conf
-      - ./ldap/sssd.conf:/etc/sssd/sssd.conf
     depends_on:
       - controller01
     networks:
