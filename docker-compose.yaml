@@ -1,0 +1,78 @@
+version: "3"
+services:
+  ldap:
+    image: osixia/openldap:1.5.0
+    environment:
+      - LDAP_ORGANISATION=Slurm
+      - LDAP_DOMAIN=slurm.local
+      - LDAP_ADMIN_PASSWORD=admin
+    ports:
+      - 389:389
+      - 636:636
+    volumes:
+      - ldap-data:/var/lib/ldap
+      - ldap-config:/etc/ldap/slapd.d
+      - ldap-cert:/container/service/slapd/assets/certs
+    networks:
+      slurm:
+  mysql:
+    image: mysql:5
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      slurm:
+  controller01:
+    image: "slurm/ubuntu:20.04"
+    hostname: controller01
+    build:
+      context: ./slurm
+      dockerfile: Dockerfile
+    command: ["slurmctld-dbd"]
+    volumes:
+      - ./slurm-config:/etc/slurm-llnl
+      - ./slurm-config:/etc/slurm
+    depends_on:
+      - mysql
+    networks:
+      slurm:
+  compute01:
+    image: "slurm/ubuntu:20.04"
+    hostname: compute01
+    command: ["slurmd"]
+    volumes:
+      - ./slurm-config:/etc/slurm-llnl
+      - home-data:/home
+      - ldap-cert:/ldap-cert
+      - ./ldap/ldap.conf:/etc/ldap/ldap.conf
+      - ./ldap/sssd.conf:/etc/sssd/sssd.conf
+    depends_on:
+      - controller01
+    networks:
+      slurm:
+  compute02:
+    image: "slurm/ubuntu:20.04"
+    hostname: compute02
+    command: ["slurmd"]
+    volumes:
+      - ./slurm-config:/etc/slurm-llnl
+      - home-data:/home
+      - ldap-cert:/ldap-cert
+      - ./ldap/ldap.conf:/etc/ldap/ldap.conf
+      - ./ldap/sssd.conf:/etc/sssd/sssd.conf
+    depends_on:
+      - controller01
+    networks:
+      slurm:
+volumes:
+  ldap-data:
+  ldap-config:
+  ldap-cert:
+  mysql-data:
+  home-data:
+networks:
+  slurm:
+    driver: bridge
